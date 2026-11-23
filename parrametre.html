@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rayane Web Studio — Paramètres</title>
+<meta name="description" content="Paramètres du compte Gmail et export du projet Rayane Web Studio." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet" />
+<script>document.documentElement.classList.add('auth-checking');</script>
+<style>
+  :root{
+    --bg:#e2dfdf; --grey:#b4b4b4; --line:#b4b4b4; --line-soft:rgba(180,180,180,.55);
+    --pill:#c9c8c8; --card:#cac2c2; --ink:#000;
+    --rail:80px; --panel:160px; --left:112px; --right:44px;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{box-sizing:border-box}
+  html.auth-checking body{visibility:hidden}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:"DM Sans",system-ui,sans-serif}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  svg.i{width:100%;height:100%;fill:none;stroke:var(--ink);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+  .top{position:relative;height:106px;margin:0 var(--right) 0 var(--left)}
+  .me{position:absolute;left:calc(17px - var(--left));top:20px;display:flex;align-items:center;gap:5px}
+  .me-av{width:44px;height:44px;border-radius:50%;background:var(--grey);overflow:hidden;flex:none}
+  .me-av img{width:100%;height:100%;object-fit:cover;display:block}
+  .me-name{min-width:140px;height:30px;padding:0 13px;display:flex;align-items:center;border-radius:10px;background:var(--pill);font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
+
+  .rail-line{position:fixed;z-index:31;left:calc(var(--rail) - 3px);top:130px;bottom:0;width:3px;background:var(--line);pointer-events:none;transition:left .45s var(--ease)}
+  body.menu-open .rail-line{left:calc(var(--panel) - 3px)}
+  .rail{position:fixed;z-index:30;left:0;top:130px;width:var(--rail)}
+  .rail-panel{width:calc(var(--rail) - 3px);padding:23px 0 10px;overflow:hidden;pointer-events:none;transition:width .45s var(--ease),background-color 0s linear .45s}
+  .rail-panel a[data-direct="true"]{pointer-events:auto}
+  .rail.open .rail-panel{width:var(--panel);background-color:var(--bg);pointer-events:auto;transition-delay:0s}
+  .rail a{display:flex;align-items:center;gap:12px;height:40px;padding-left:calc((var(--rail) - 3px - 26px) / 2);white-space:nowrap}
+  .rail a .ic{width:26px;height:26px;flex:none;transition:transform .35s var(--ease)}
+  .rail a:hover .ic,.rail a:focus-visible .ic{transform:scale(1.08)}
+  .rail a span:not(.ic){font-size:16px;font-weight:500;opacity:0;transform:translateX(-12px);transition:opacity .2s ease,transform .3s var(--ease)}
+  .rail.open a span:not(.ic){opacity:1;transform:none;transition:opacity .35s ease calc(var(--i)*45ms + 120ms),transform .45s var(--ease) calc(var(--i)*45ms + 120ms)}
+
+  main{margin:0 var(--right) 0 var(--left);padding-bottom:80px;transition:margin-left .45s var(--ease)}
+  body.menu-open main{margin-left:max(var(--left),calc(var(--panel) + 8px))}
+  .top-rule{height:2.5px;background:var(--line);margin-top:-14px}
+  h1{margin:20px 0 18px;font-size:24px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;max-width:920px}
+  .card{background:var(--card);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px}
+  .card h2{margin:0;font-size:16px;font-weight:700}
+  .card p{margin:0;font-size:13.5px;line-height:1.5;color:rgba(0,0,0,.78)}
+  .acct{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.55)}
+  .acct-av{width:40px;height:40px;border-radius:50%;background:var(--grey);overflow:hidden;flex:none}
+  .acct-av img{width:100%;height:100%;object-fit:cover;display:block}
+  .acct-name{font-size:14px;font-weight:700}
+  .acct-mail{font-size:12.5px;color:rgba(0,0,0,.68)}
+  .btn-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;
+    border-radius:999px;border:1.5px solid rgba(0,0,0,.18);background:#fff;color:var(--ink);
+    font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;
+  }
+  .btn.primary{background:#000;color:#fff;border-color:#000}
+  .btn.danger{color:#991b1b;border-color:#fca5a5}
+
+  @media (max-width:700px){
+    :root{--rail:56px;--left:72px;--right:16px;--panel:150px}
+    .me{left:calc(9px - var(--left));top:24px}.me-av{width:36px;height:36px}.me-name{min-width:0;height:26px;font-size:13px}
+    .top{height:90px}.rail,.rail-line{top:90px}
+    .rail a .ic{width:24px;height:24px}.rail a{padding-left:calc((var(--rail) - 3px - 24px) / 2)}
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3.2"/><path d="M5.8 19.3c1.3-2.6 3.6-3.8 6.2-3.8s4.9 1.2 6.2 3.8"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20.5 11.5a8 8 0 0 1-11.6 7.1L4 20l1.4-4.3A8 8 0 1 1 20.5 11.5z"/><path d="M8.5 11.5h.01M12.5 11.5h.01M16.5 11.5h.01"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-mega" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/><path d="M22 3.5l-1.5 1M22 8.5l-1.5-.5"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7"/><path d="m21 21-5.6-5.6" stroke-width="2.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v8M8 12h8"/></symbol>
+</svg>
+
+<header class="top">
+  <a class="me" id="me" href="index.html" aria-label="Accueil">
+    <span class="me-av" id="me-av"></span><span class="me-name" id="me-name">User name</span>
+  </a>
+</header>
+
+<div class="rail-line" aria-hidden="true"></div>
+<nav class="rail" id="rail" aria-label="Fonctionnalités">
+<div class="rail-panel">
+  <a href="login.html?switch=1" id="rail-profile" data-direct="true" style="--i:0"><span class="ic"><svg class="i"><use href="#i-user"/></svg></span><span>Profil</span></a>
+  <a href="messages.html" data-direct="true" style="--i:1"><span class="ic"><svg class="i"><use href="#i-chat"/></svg></span><span>Messages</span></a>
+  <a href="parrametre.html" data-direct="true" aria-current="page" style="--i:2"><span class="ic"><svg class="i"><use href="#i-gear"/></svg></span><span>Paramètres</span></a>
+  <a href="annonces.html" data-direct="true" style="--i:3"><span class="ic"><svg class="i"><use href="#i-mega"/></svg></span><span>Annonces</span></a>
+  <a href="recherche.html" data-direct="true" style="--i:4"><span class="ic"><svg class="i"><use href="#i-search"/></svg></span><span>Recherche</span></a>
+  <a href="publications.html" data-direct="true" style="--i:5"><span class="ic"><svg class="i"><use href="#i-plus"/></svg></span><span>Publier</span></a>
+</div>
+</nav>
+
+<main>
+  <div class="top-rule" aria-hidden="true"></div>
+  <h1>Paramètres</h1>
+  <div class="grid">
+    <section class="card" aria-label="Compte Google connecté">
+      <h2>Compte Google (Gmail)</h2>
+      <div class="acct">
+        <span class="acct-av" id="acct-av"></span>
+        <div>
+          <div class="acct-name" id="acct-name">Utilisateur</div>
+          <div class="acct-mail" id="acct-mail"></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <a class="btn" href="login.html?switch=1">Changer de compte</a>
+        <button type="button" class="btn danger" id="logout-btn">Se déconnecter</button>
+      </div>
+    </section>
+
+    <section class="card" aria-label="Télécharger le projet VS Code">
+      <h2>Projet complet VS Code</h2>
+      <p>Téléchargez l’archive unifiée du projet (index.html, login.html, messages.html, annonces.html, publications.html, configuration Vite et Firebase) pour l’ouvrir directement dans VS Code.</p>
+      <div class="btn-row">
+        <a class="btn primary" href="/rayane-web-studio-vscode.zip" download="rayane-web-studio-vscode.zip">Télécharger le projet (.zip)</a>
+        <a class="btn" href="index.html">Retour à l’accueil</a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script type="module">
+  import { requireAuthGate, signOutUser } from '/src/lib/firebase-client.ts';
+
+  const rail = document.getElementById('rail');
+  const setRail = (o) => {
+    rail.classList.toggle('open', o);
+    document.body.classList.toggle('menu-open', o);
+  };
+  rail.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') setRail(true); });
+  rail.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') setRail(false); });
+
+  requireAuthGate((profile) => {
+    document.getElementById('me-name').textContent = profile.name;
+    document.getElementById('acct-name').textContent = profile.name;
+    document.getElementById('acct-mail').textContent = profile.email || '';
+    const fillAv = (el) => {
+      el.replaceChildren();
+      if (/^(https?:\/\/|\/|data:image\/)/i.test(profile.photo)) {
+        const img = document.createElement('img');
+        img.src = profile.photo;
+        img.alt = profile.name;
+        img.referrerPolicy = 'no-referrer';
+        el.append(img);
+      }
+    };
+    fillAv(document.getElementById('me-av'));
+    fillAv(document.getElementById('acct-av'));
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await signOutUser();
+    window.location.replace('login.html');
+  });
+</script>
+</body>
+</html>

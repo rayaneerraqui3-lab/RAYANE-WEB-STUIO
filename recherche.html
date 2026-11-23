@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rayane Web Studio — Recherche</title>
+<meta name="description" content="Recherche globale dans Rayane Web Studio : contacts, publications et annonces." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+<script>document.documentElement.classList.add('auth-checking');</script>
+<style>
+  :root{
+    --bg:#e2dfdf; --grey:#b4b4b4; --line:#b4b4b4; --pill:#c9c8c8; --card:#cac2c2; --ink:#000;
+    --rail:80px; --panel:160px; --left:112px; --right:44px; --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{box-sizing:border-box}
+  html.auth-checking body{visibility:hidden}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:"DM Sans",system-ui,sans-serif}
+  a{color:inherit;text-decoration:none}
+  a:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  svg.i{width:100%;height:100%;fill:none;stroke:var(--ink);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+  .top{position:relative;height:106px;margin:0 var(--right) 0 var(--left)}
+  .me{position:absolute;left:calc(17px - var(--left));top:20px;display:flex;align-items:center;gap:5px}
+  .me-av{width:44px;height:44px;border-radius:50%;background:var(--grey);overflow:hidden;flex:none}
+  .me-av img{width:100%;height:100%;object-fit:cover;display:block}
+  .me-name{min-width:140px;height:30px;padding:0 13px;display:flex;align-items:center;border-radius:10px;background:var(--pill);font-size:14px;font-weight:500}
+
+  .rail-line{position:fixed;z-index:31;left:calc(var(--rail) - 3px);top:130px;bottom:0;width:3px;background:var(--line);pointer-events:none;transition:left .45s var(--ease)}
+  body.menu-open .rail-line{left:calc(var(--panel) - 3px)}
+  .rail{position:fixed;z-index:30;left:0;top:130px;width:var(--rail)}
+  .rail-panel{width:calc(var(--rail) - 3px);padding:23px 0 10px;overflow:hidden;pointer-events:none;transition:width .45s var(--ease),background-color 0s linear .45s}
+  .rail-panel a[data-direct="true"]{pointer-events:auto}
+  .rail.open .rail-panel{width:var(--panel);background-color:var(--bg);pointer-events:auto;transition-delay:0s}
+  .rail a{display:flex;align-items:center;gap:12px;height:40px;padding-left:calc((var(--rail) - 3px - 26px) / 2);white-space:nowrap}
+  .rail a .ic{width:26px;height:26px;flex:none}
+  .rail a span:not(.ic){font-size:16px;font-weight:500;opacity:0;transform:translateX(-12px);transition:opacity .2s ease,transform .3s var(--ease)}
+  .rail.open a span:not(.ic){opacity:1;transform:none}
+
+  main{margin:0 var(--right) 0 var(--left);padding-bottom:80px;transition:margin-left .45s var(--ease)}
+  body.menu-open main{margin-left:max(var(--left),calc(var(--panel) + 8px))}
+  .top-rule{height:2.5px;background:var(--line);margin-top:-14px}
+  h1{margin:20px 0 14px;font-size:24px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+  .search-input{
+    width:min(520px,100%);height:44px;padding:0 18px;border:0;border-radius:999px;
+    background:var(--pill);font:inherit;font-size:15px;color:var(--ink);
+  }
+  .results{margin-top:20px;display:flex;flex-direction:column;gap:10px;max-width:680px}
+  .hit{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-radius:10px;background:var(--card);font-size:14px;font-weight:500}
+  .hit-type{font-size:12px;color:rgba(0,0,0,.62)}
+  .empty{font-size:14px;color:rgba(0,0,0,.6)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3.2"/><path d="M5.8 19.3c1.3-2.6 3.6-3.8 6.2-3.8s4.9 1.2 6.2 3.8"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20.5 11.5a8 8 0 0 1-11.6 7.1L4 20l1.4-4.3A8 8 0 1 1 20.5 11.5z"/><path d="M8.5 11.5h.01M12.5 11.5h.01M16.5 11.5h.01"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-mega" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/><path d="M22 3.5l-1.5 1M22 8.5l-1.5-.5"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7"/><path d="m21 21-5.6-5.6" stroke-width="2.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v8M8 12h8"/></symbol>
+</svg>
+
+<header class="top">
+  <a class="me" id="me" href="index.html" aria-label="Accueil">
+    <span class="me-av" id="me-av"></span><span class="me-name" id="me-name">User name</span>
+  </a>
+</header>
+
+<div class="rail-line" aria-hidden="true"></div>
+<nav class="rail" id="rail" aria-label="Fonctionnalités">
+<div class="rail-panel">
+  <a href="login.html?switch=1" data-direct="true" style="--i:0"><span class="ic"><svg class="i"><use href="#i-user"/></svg></span><span>Profil</span></a>
+  <a href="messages.html" data-direct="true" style="--i:1"><span class="ic"><svg class="i"><use href="#i-chat"/></svg></span><span>Messages</span></a>
+  <a href="parrametre.html" data-direct="true" style="--i:2"><span class="ic"><svg class="i"><use href="#i-gear"/></svg></span><span>Paramètres</span></a>
+  <a href="annonces.html" data-direct="true" style="--i:3"><span class="ic"><svg class="i"><use href="#i-mega"/></svg></span><span>Annonces</span></a>
+  <a href="recherche.html" data-direct="true" aria-current="page" style="--i:4"><span class="ic"><svg class="i"><use href="#i-search"/></svg></span><span>Recherche</span></a>
+  <a href="publications.html" data-direct="true" style="--i:5"><span class="ic"><svg class="i"><use href="#i-plus"/></svg></span><span>Publier</span></a>
+</div>
+</nav>
+
+<main>
+  <div class="top-rule" aria-hidden="true"></div>
+  <h1>Recherche</h1>
+  <input type="search" class="search-input" id="global-q" placeholder="Rechercher un contact, une annonce ou une publication..." aria-label="Recherche globale" />
+  <div class="results" id="results"></div>
+</main>
+
+<script type="module">
+  import { requireAuthGate } from '/src/lib/firebase-client.ts';
+  import { createSeedMessagesState } from '/src/lib/messages-logic.ts';
+
+  const rail = document.getElementById('rail');
+  const setRail = (o) => {
+    rail.classList.toggle('open', o);
+    document.body.classList.toggle('menu-open', o);
+  };
+  rail.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') setRail(true); });
+  rail.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') setRail(false); });
+
+  requireAuthGate((profile) => {
+    document.getElementById('me-name').textContent = profile.name;
+    const av = document.getElementById('me-av');
+    av.replaceChildren();
+    if (/^(https?:\/\/|\/|data:image\/)/i.test(profile.photo)) {
+      const img = document.createElement('img');
+      img.src = profile.photo;
+      img.alt = profile.name;
+      img.referrerPolicy = 'no-referrer';
+      av.append(img);
+    }
+  });
+
+  const qIn = document.getElementById('global-q');
+  const results = document.getElementById('results');
+
+  function gatherItems() {
+    const items = [];
+    try {
+      const rawMsg = localStorage.getItem('rws_messages_state_v1');
+      const msgState = rawMsg ? JSON.parse(rawMsg) : createSeedMessagesState();
+      (msgState.contacts || []).forEach((c) => {
+        items.push({ label: c.name, type: 'Message', href: 'messages.html' });
+      });
+    } catch {}
+    try {
+      const posts = JSON.parse(localStorage.getItem('rws_published_posts') || '[]');
+      posts.forEach((p) => {
+        const txt = Array.isArray(p.elements) ? p.elements.map((e) => e.text).filter(Boolean).join(' ') : '';
+        items.push({ label: (p.name || 'Publication') + (txt ? ' — ' + txt : ''), type: 'Publication', href: 'index.html#p-' + p.id });
+      });
+    } catch {}
+    try {
+      const ads = JSON.parse(localStorage.getItem('rws_published_ads') || '[]');
+      ads.forEach((a) => {
+        const txt = Array.isArray(a.elements) ? a.elements.map((e) => e.text).filter(Boolean).join(' ') : 'Annonce';
+        items.push({ label: txt || 'Annonce', type: 'Annonce', href: 'annonces.html' });
+      });
+    } catch {}
+    return items;
+  }
+
+  function render() {
+    const term = qIn.value.trim().toLowerCase();
+    const hits = gatherItems().filter((x) => !term || x.label.toLowerCase().includes(term)).slice(0, 12);
+    results.replaceChildren();
+    if (!hits.length) {
+      const p = document.createElement('p');
+      p.className = 'empty';
+      p.textContent = 'Aucun résultat.';
+      results.append(p);
+      return;
+    }
+    hits.forEach((h) => {
+      const a = document.createElement('a');
+      a.className = 'hit';
+      a.href = h.href;
+      const span = document.createElement('span');
+      span.textContent = h.label;
+      const type = document.createElement('span');
+      type.className = 'hit-type';
+      type.textContent = h.type;
+      a.append(span, type);
+      results.append(a);
+    });
+  }
+
+  qIn.addEventListener('input', render);
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rayane Web Studio — Messages</title>
+<meta name="description" content="Messagerie directe Rayane Web Studio." />
+<meta property="og:title" content="Rayane Web Studio — Messages" />
+<meta property="og:description" content="Messagerie directe Rayane Web Studio." />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet" />
+<script>document.documentElement.classList.add('auth-checking');</script>
+<style>
+  /* Couleurs et métriques strictement identiques à index.html */
+  :root{
+    --bg:#e2dfdf; --grey:#b4b4b4; --line:#b4b4b4; --line-2:#b9b7b7; --line-soft:rgba(180,180,180,.55);
+    --pill:#c9c8c8; --card:#cac2c2; --media:#8f8b8b; --ink:#000;
+    --rail:80px; --panel:160px; --left:112px; --right:44px;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --shrink-dur:.55s;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  html.auth-checking body{visibility:hidden}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:"DM Sans",system-ui,sans-serif}
+  a{color:inherit;text-decoration:none}
+  button,input{font-family:inherit}
+  a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  [hidden]{display:none!important}
+  svg.i{width:100%;height:100%;fill:none;stroke:var(--ink);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+  /* En-tête : profil + recherche (identique à index.html) */
+  .top{position:relative;height:106px;margin:0 var(--right) 0 var(--left)}
+  .me{position:absolute;left:calc(17px - var(--left));top:20px;display:flex;align-items:center;gap:5px}
+  .me-av{width:44px;height:44px;border-radius:50%;background:var(--grey);overflow:hidden;flex:none}
+  .me-av img{width:100%;height:100%;object-fit:cover;display:block}
+  .me-name{min-width:140px;height:30px;padding:0 13px;display:flex;align-items:center;border-radius:10px;background:var(--pill);font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
+  .search{position:absolute;right:0;top:24px;width:42px;height:36px;display:flex;align-items:center;justify-content:flex-end;border-radius:8px;background:var(--grey);overflow:hidden;transition:width .55s var(--ease)}
+  .search.open{width:min(220px,60vw)}
+  .search input{flex:none;width:0;min-width:0;height:100%;padding:0;border:0;background:transparent;font:inherit;font-size:15px;color:var(--ink);visibility:hidden;opacity:0;transition:opacity .3s ease .12s}
+  .search input::placeholder{color:var(--ink);opacity:1}
+  .search.open input{flex:1;width:auto;padding:0 4px 0 14px;visibility:visible;opacity:1}
+  .search input:focus-visible{outline:0}
+  .search button{flex:none;width:42px;height:36px;border:0;background:transparent;padding:7px 10px;cursor:pointer}
+
+  /* Colonne des fonctionnalités (identique à index.html) */
+  .rail-line{position:fixed;z-index:31;left:calc(var(--rail) - 3px);top:130px;bottom:0;width:3px;background:var(--line);pointer-events:none;transition:left .45s var(--ease)}
+  body.menu-open .rail-line{left:calc(var(--panel) - 3px)}
+  .rail{position:fixed;z-index:30;left:0;top:130px;width:var(--rail)}
+  .rail-panel{width:calc(var(--rail) - 3px);padding:23px 0 10px;overflow:hidden;pointer-events:none;transition:width .45s var(--ease),background-color 0s linear .45s}
+  .rail-panel a[data-direct="true"]{pointer-events:auto}
+  .rail.open .rail-panel{width:var(--panel);background-color:var(--bg);pointer-events:auto;transition-delay:0s}
+  .rail a{display:flex;align-items:center;gap:12px;height:40px;padding-left:calc((var(--rail) - 3px - 26px) / 2);white-space:nowrap}
+  .rail a .ic{width:26px;height:26px;flex:none;transition:transform .35s var(--ease)}
+  .rail a:hover .ic,.rail a:focus-visible .ic{transform:scale(1.08)}
+  .rail a[aria-current="page"] .ic{transform:scale(1.08)}
+  .rail a span:not(.ic){font-size:16px;font-weight:500;opacity:0;transform:translateX(-12px);transition:opacity .2s ease,transform .3s var(--ease)}
+  .rail.open a span:not(.ic){opacity:1;transform:none;transition:opacity .35s ease calc(var(--i)*45ms + 120ms),transform .45s var(--ease) calc(var(--i)*45ms + 120ms)}
+
+  /* Contenu principal Messages */
+  main{margin:0 var(--right) 0 var(--left);padding-bottom:28px;transition:margin-left .45s var(--ease)}
+  body.menu-open main{margin-left:max(var(--left),calc(var(--panel) + 8px))}
+
+  /* Ligne horizontale supérieure sous le profil et la recherche (Images 1–6) */
+  .top-rule{height:2.5px;background:var(--line);margin-top:-14px}
+
+  .msg-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 18px}
+  .msg-title{margin:0;font-size:24px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;line-height:1.1}
+
+  /* Espace Messages : Barre latérale des contacts + Conversation active */
+  .msg-workspace{
+    display:flex;
+    align-items:stretch;
+    min-height:calc(100vh - 185px);
+    position:relative;
+  }
+
+  /* Sidebar gauche des contacts (Images 1 -> 2 -> 3 -> 4 -> 5 -> 6) */
+  .contacts-sidebar{
+    flex:none;
+    width:clamp(188px,21vw,236px);
+    padding:4px 20px 16px 0;
+    border-right:2.5px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    transition:
+      width var(--shrink-dur) var(--ease),
+      padding-right var(--shrink-dur) var(--ease),
+      gap var(--shrink-dur) var(--ease);
+    will-change:width;
+  }
+  .msg-workspace[data-compact="true"] .contacts-sidebar{
+    width:82px;
+    padding-right:14px;
+    gap:11px;
+  }
+
+  .contact-item{
+    position:relative;
+    width:100%;
+    border:0;
+    background:transparent;
+    padding:3px 0;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    text-align:left;
+    color:var(--ink);
+    border-radius:10px;
+    transition:gap var(--shrink-dur) var(--ease),padding var(--shrink-dur) var(--ease),opacity .3s ease;
+  }
+  .msg-workspace[data-compact="true"] .contact-item{
+    gap:6px;
+    padding:1px 0;
+  }
+
+  .contact-av{
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    background:var(--grey);
+    overflow:hidden;
+    flex:none;
+    position:relative;
+    transition:
+      width var(--shrink-dur) var(--ease),
+      height var(--shrink-dur) var(--ease),
+      opacity var(--shrink-dur) var(--ease),
+      transform .2s var(--ease);
+  }
+  .contact-av img{width:100%;height:100%;object-fit:cover;display:block}
+  .msg-workspace[data-compact="true"] .contact-av{
+    width:11px;
+    height:11px;
+    opacity:.35;
+  }
+  .msg-workspace[data-compact="true"] .contact-item.is-active .contact-av,
+  .msg-workspace[data-compact="true"] .contact-item:hover .contact-av,
+  .msg-workspace[data-compact="true"] .contact-item:focus-visible .contact-av{
+    opacity:.95;
+    transform:scale(1.1);
+  }
+
+  .contact-pill{
+    flex:1 1 auto;
+    min-width:0;
+    height:22px;
+    padding:0 11px;
+    border-radius:999px;
+    background:var(--pill);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+    overflow:hidden;
+    transition:
+      height var(--shrink-dur) var(--ease),
+      padding var(--shrink-dur) var(--ease),
+      background-color .25s ease,
+      opacity var(--shrink-dur) var(--ease);
+  }
+  .contact-item:hover .contact-pill{background:#bebdbd}
+  .contact-item.is-active .contact-pill{background:#b4b4b4}
+  .msg-workspace[data-compact="true"] .contact-pill{
+    height:8px;
+    padding:0;
+    opacity:.42;
+  }
+  .msg-workspace[data-compact="true"] .contact-item.is-active .contact-pill,
+  .msg-workspace[data-compact="true"] .contact-item:hover .contact-pill,
+  .msg-workspace[data-compact="true"] .contact-item:focus-visible .contact-pill{
+    opacity:.9;
+  }
+
+  .contact-name{
+    font-size:13px;
+    font-weight:500;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    opacity:1;
+    transition:opacity .22s ease;
+  }
+  .msg-workspace[data-compact="true"] .contact-name,
+  .msg-workspace[data-compact="true"] .contact-unread{
+    opacity:0;
+    pointer-events:none;
+  }
+
+  .contact-unread{
+    flex:none;
+    min-width:16px;
+    height:16px;
+    padding:0 5px;
+    border-radius:999px;
+    background:#000;
+    color:#fff;
+    font-size:10px;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    transition:opacity .2s ease;
+  }
+
+  /* Infobulle flottante propre quand la barre est réduite */
+  .msg-workspace[data-compact="true"] .contact-item::after{
+    content:attr(data-name);
+    position:absolute;
+    left:calc(100% + 10px);
+    top:50%;
+    transform:translateY(-50%) translateX(-4px);
+    padding:4px 10px;
+    border-radius:8px;
+    background:#111;
+    color:#fff;
+    font-size:12px;
+    font-weight:500;
+    white-space:nowrap;
+    opacity:0;
+    pointer-events:none;
+    z-index:20;
+    transition:opacity .15s ease,transform .15s var(--ease);
+  }
+  .msg-workspace[data-compact="true"] .contact-item:hover::after,
+  .msg-workspace[data-compact="true"] .contact-item:focus-visible::after{
+    opacity:1;
+    transform:translateY(-50%) translateX(0);
+  }
+
+  .contacts-empty{font-size:13px;color:rgba(0,0,0,.62);padding:8px 0}
+
+  /* Panneau droit : Conversation active (Image 6) */
+  .chat-pane{
+    flex:1 1 auto;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    padding-left:24px;
+    transition:padding-left var(--shrink-dur) var(--ease);
+  }
+
+  .chat-empty-state{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:32px 20px;
+    color:rgba(0,0,0,.52);
+    font-size:14px;
+    gap:6px;
+  }
+
+  .chat-active{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    opacity:1;
+    animation:chatFadeIn .38s var(--ease);
+  }
+  @keyframes chatFadeIn{
+    from{opacity:0;transform:translateY(6px)}
+    to{opacity:1;transform:none}
+  }
+
+  /* En-tête de la conversation active : Avatar + Pill + Ligne horizontale (Image 6) */
+  .chat-header{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:2px 0 14px;
+  }
+  .chat-peer-av{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    background:var(--grey);
+    overflow:hidden;
+    flex:none;
+  }
+  .chat-peer-av img{width:100%;height:100%;object-fit:cover;display:block}
+  .chat-peer-pill{
+    height:26px;
+    min-width:136px;
+    max-width:260px;
+    padding:0 14px;
+    border-radius:999px;
+    background:var(--pill);
+    display:inline-flex;
+    align-items:center;
+    font-size:13.5px;
+    font-weight:600;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    flex:none;
+  }
+  .chat-header-line{
+    flex:1 1 auto;
+    min-width:24px;
+    height:2.5px;
+    background:var(--line);
+  }
+  .chat-expand-btn{
+    flex:none;
+    height:28px;
+    padding:0 10px;
+    border:1px solid rgba(0,0,0,.16);
+    border-radius:999px;
+    background:rgba(255,255,255,.72);
+    color:var(--ink);
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:background-color .15s ease;
+  }
+  .chat-expand-btn:hover{background:#fff}
+
+  /* Fil des messages */
+  .chat-thread{
+    flex:1 1 auto;
+    overflow-y:auto;
+    padding:14px 4px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    max-height:calc(100vh - 335px);
+    min-height:240px;
+  }
+  .msg-row{
+    display:flex;
+    flex-direction:column;
+    max-width:min(74%,520px);
+    gap:4px;
+  }
+  .msg-row.is-me{align-self:flex-end;align-items:flex-end}
+  .msg-row.is-them{align-self:flex-start;align-items:flex-start}
+
+  .msg-bubble{
+    padding:10px 14px;
+    border-radius:16px;
+    font-size:14px;
+    line-height:1.45;
+    word-break:break-word;
+  }
+  .msg-row.is-them .msg-bubble{
+    background:var(--card);
+    color:var(--ink);
+    border-bottom-left-radius:4px;
+  }
+  .msg-row.is-me .msg-bubble{
+    background:#141414;
+    color:#fff;
+    border-bottom-right-radius:4px;
+  }
+  .msg-bubble.is-like{
+    background:transparent!important;
+    padding:2px 4px;
+    font-size:30px;
+    line-height:1;
+  }
+  .msg-bubble.is-media{
+    padding:6px;
+    border-radius:14px;
+    overflow:hidden;
+  }
+  .msg-media-img{
+    display:block;
+    max-width:min(280px,62vw);
+    max-height:220px;
+    border-radius:10px;
+    object-fit:cover;
+    cursor:zoom-in;
+  }
+  .msg-media-vid{
+    display:block;
+    max-width:min(300px,64vw);
+    max-height:220px;
+    border-radius:10px;
+  }
+  .msg-media-audio{
+    display:block;
+    width:min(240px,58vw);
+    height:36px;
+  }
+  .msg-time{
+    font-size:11px;
+    color:rgba(0,0,0,.55);
+    font-variant-numeric:tabular-nums;
+    padding:0 4px;
+  }
+
+  /* Bandeau d'enregistrement vocal / statut média */
+  .composer-notice{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:7px 14px;
+    margin-bottom:8px;
+    border-radius:999px;
+    background:rgba(255,255,255,.85);
+    border:1px solid rgba(0,0,0,.14);
+    font-size:12.5px;
+    font-weight:600;
+    align-self:flex-end;
+  }
+  .composer-notice button{
+    border:0;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;
+  }
+  .rec-stop-btn{background:#000;color:#fff}
+  .rec-cancel-btn{background:var(--pill);color:#000}
+
+  /* Barre de composition en bas à droite (exactement comme Image 6) */
+  .chat-composer{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    padding-top:10px;
+    margin-top:auto;
+  }
+  .comp-icon-btn{
+    width:32px;
+    height:32px;
+    padding:4px;
+    border:0;
+    border-radius:50%;
+    background:transparent;
+    color:var(--ink);
+    display:grid;
+    place-items:center;
+    cursor:pointer;
+    flex:none;
+    transition:transform .16s var(--ease),background-color .15s ease;
+  }
+  .comp-icon-btn:hover{background:rgba(0,0,0,.07);transform:scale(1.08)}
+  .comp-icon-btn.is-recording{background:#fee2e2;color:#b91c1c}
+  .comp-icon-btn svg{width:22px;height:22px;display:block}
+
+  .composer-input{
+    width:clamp(170px,24vw,290px);
+    height:32px;
+    padding:0 15px;
+    border:0;
+    border-radius:999px;
+    background:#bfb7b7;
+    color:var(--ink);
+    font-size:13.5px;
+    font-weight:500;
+    transition:background-color .15s ease,width .25s var(--ease);
+  }
+  .composer-input::placeholder{color:rgba(0,0,0,.55)}
+  .composer-input:focus{background:#c9c2c2}
+  .composer-input:focus-visible{outline:1.5px solid rgba(0,0,0,.6);outline-offset:1px}
+
+  .send-btn{
+    width:30px;
+    height:30px;
+    border:0;
+    border-radius:50%;
+    background:#000;
+    color:#fff;
+    display:grid;
+    place-items:center;
+    cursor:pointer;
+    flex:none;
+    transition:transform .16s var(--ease),background-color .15s ease;
+  }
+  .send-btn:hover{transform:scale(1.08);background:#222}
+  .send-btn svg{width:15px;height:15px;fill:currentColor;transform:translateX(-0.5px)}
+
+  /* Visionneuse d'image */
+  .lightbox{
+    position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.78);
+    display:grid;place-items:center;padding:24px;
+  }
+  .lightbox img{max-width:92vw;max-height:86vh;border-radius:12px;object-fit:contain;background:#fff}
+  .lightbox-close{
+    position:fixed;top:20px;right:24px;width:40px;height:40px;border:0;border-radius:50%;
+    background:#fff;color:#000;font-size:18px;font-weight:700;cursor:pointer;
+  }
+
+  @media (max-width:760px){
+    :root{--rail:56px;--left:72px;--right:16px;--panel:150px}
+    .me{left:calc(9px - var(--left));top:24px}.me-av{width:36px;height:36px}.me-name{min-width:0;height:26px;font-size:13px}
+    .top{height:90px}.rail,.rail-line{top:90px}
+    .rail a .ic{width:24px;height:24px}.rail a{padding-left:calc((var(--rail) - 3px - 24px) / 2)}
+    .contacts-sidebar{width:155px;padding-right:12px}
+    .msg-workspace[data-compact="true"] .contacts-sidebar{width:54px;padding-right:8px}
+    .chat-pane{padding-left:10px}
+    .chat-header{gap:6px;padding:2px 0 10px}
+    .chat-peer-av{width:30px;height:30px}
+    .chat-peer-pill{flex:0 1 auto;min-width:0;max-width:112px;height:24px;padding:0 10px;font-size:12.5px}
+    .chat-header-line{min-width:8px;flex:1 1 8px}
+    .chat-expand-btn{height:24px;padding:0 8px;font-size:11px}
+    .msg-row{max-width:88%}
+    .chat-composer{gap:6px;flex-wrap:wrap}
+    .composer-input{flex:1 1 130px;min-width:0;width:auto}
+    .chat-thread{max-height:calc(100vh - 320px)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition-duration:.01ms!important;animation-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3.2"/><path d="M5.8 19.3c1.3-2.6 3.6-3.8 6.2-3.8s4.9 1.2 6.2 3.8"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20.5 11.5a8 8 0 0 1-11.6 7.1L4 20l1.4-4.3A8 8 0 1 1 20.5 11.5z"/><path d="M8.5 11.5h.01M12.5 11.5h.01M16.5 11.5h.01"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-mega" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/><path d="M22 3.5l-1.5 1M22 8.5l-1.5-.5"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7"/><path d="m21 21-5.6-5.6" stroke-width="2.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v8M8 12h8"/></symbol>
+</svg>
+
+<header class="top">
+  <a class="me" id="me" href="login.html?switch=1" aria-label="Profil">
+    <span class="me-av" id="me-av"></span><span class="me-name" id="me-name">User name</span>
+  </a>
+  <div class="search" id="search">
+    <input id="q" type="search" placeholder="Rechercher un contact" autocomplete="off" aria-label="Rechercher un contact" tabindex="-1" />
+    <button type="button" id="search-btn" aria-expanded="false" aria-label="Ouvrir la recherche"><svg class="i"><use href="#i-search"/></svg></button>
+  </div>
+</header>
+
+<div class="rail-line" aria-hidden="true"></div>
+<nav class="rail" id="rail" aria-label="Fonctionnalités">
+<div class="rail-panel">
+  <a href="login.html?switch=1" id="rail-profile" data-direct="true" style="--i:0"><span class="ic"><svg class="i"><use href="#i-user"/></svg></span><span>Profil</span></a>
+  <a href="messages.html" data-direct="true" aria-current="page" style="--i:1"><span class="ic"><svg class="i"><use href="#i-chat"/></svg></span><span>Messages</span></a>
+  <a href="parrametre.html" data-direct="true" style="--i:2"><span class="ic"><svg class="i"><use href="#i-gear"/></svg></span><span>Paramètres</span></a>
+  <a href="annonces.html" data-direct="true" style="--i:3"><span class="ic"><svg class="i"><use href="#i-mega"/></svg></span><span>Annonces</span></a>
+  <a href="recherche.html" data-direct="true" style="--i:4"><span class="ic"><svg class="i"><use href="#i-search"/></svg></span><span>Recherche</span></a>
+  <a href="publications.html" data-direct="true" style="--i:5" title="Ajouter une publication" aria-label="Ajouter une publication"><span class="ic"><svg class="i"><use href="#i-plus"/></svg></span><span>Publier</span></a>
+</div>
+</nav>
+
+<main>
+  <div class="top-rule" aria-hidden="true"></div>
+
+  <div class="msg-head">
+    <h1 class="msg-title">MESSAGES</h1>
+  </div>
+
+  <section class="msg-workspace" id="msg-workspace" data-compact="false" data-testid="messages-workspace" aria-label="Messagerie">
+    <!-- Colonne des utilisateurs contactés (se rétrécit en douceur de l'image 1 vers l'image 6) -->
+    <aside class="contacts-sidebar" id="contacts-sidebar" data-testid="contacts-sidebar" aria-label="Utilisateurs contactés"></aside>
+
+    <!-- Zone de conversation active (Image 6) -->
+    <section class="chat-pane" id="chat-pane" aria-label="Conversation active">
+      <div class="chat-empty-state" id="chat-empty-state" data-testid="chat-empty-state">
+        <span>Sélectionnez un utilisateur à gauche pour ouvrir la conversation.</span>
+      </div>
+
+      <div class="chat-active" id="chat-active" data-testid="chat-active" hidden>
+        <div class="chat-header">
+          <span class="chat-peer-av" id="chat-peer-av"></span>
+          <span class="chat-peer-pill" id="chat-peer-name">Utilisateur</span>
+          <span class="chat-header-line" aria-hidden="true"></span>
+          <button type="button" class="chat-expand-btn" id="chat-expand-btn" aria-label="Afficher toute la liste des contacts" title="Afficher la liste complète">Contacts</button>
+        </div>
+
+        <div class="chat-thread" id="chat-thread" role="log" aria-live="polite" aria-label="Historique des messages"></div>
+
+        <div class="composer-notice" id="composer-notice" hidden>
+          <span id="composer-notice-text">Enregistrement audio...</span>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="rec-cancel-btn" id="rec-cancel-btn">Annuler</button>
+            <button type="button" class="rec-stop-btn" id="rec-stop-btn">Envoyer</button>
+          </div>
+        </div>
+
+        <form class="chat-composer" id="chat-composer" aria-label="Envoyer un message">
+          <input type="file" id="file-photo" accept="image/*" hidden />
+          <input type="file" id="file-video" accept="video/mp4,video/webm,video/quicktime,video/*" hidden />
+
+          <button type="button" class="comp-icon-btn" id="btn-like" aria-label="Envoyer un J'aime" title="J'aime">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M2 21h4V9H2v12zm20-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L13.17 1 7.59 6.59C7.22 6.95 7 7.45 7 8v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-1z"/>
+            </svg>
+          </button>
+
+          <button type="button" class="comp-icon-btn" id="btn-mic" aria-label="Enregistrer un message vocal" title="Message vocal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="2" width="6" height="12" rx="3"/>
+              <path d="M5 10a7 7 0 0 0 14 0"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+            </svg>
+          </button>
+
+          <button type="button" class="comp-icon-btn" id="btn-video" aria-label="Envoyer une vidéo" title="Envoyer une vidéo">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" fill="currentColor"/>
+              <polygon points="10,8 16,12 10,16" fill="#e2dfdf"/>
+            </svg>
+          </button>
+
+          <button type="button" class="comp-icon-btn" id="btn-photo" aria-label="Envoyer une photo" title="Envoyer une photo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </button>
+
+          <input type="text" class="composer-input" id="composer-input" placeholder="Écrire un message..." autocomplete="off" aria-label="Écrire un message" />
+
+          <button type="submit" class="send-btn" id="btn-send" aria-label="Envoyer le message" title="Envoyer">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </section>
+  </section>
+</main>
+
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-label="Aperçu de l'image">
+  <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Fermer l'aperçu">✕</button>
+  <img id="lightbox-img" src="" alt="Image en plein écran" />
+</div>
+
+<script type="module" src="/src/messages-entry.ts"></script>
+</body>
+</html>

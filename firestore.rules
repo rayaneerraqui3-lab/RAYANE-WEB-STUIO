@@ -1,0 +1,160 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOwner(userId) {
+      return isVerified() && request.auth.uid == userId;
+    }
+
+    function isValidPublicProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'photoURL', 'updatedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 60
+        && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500))
+        && data.updatedAt == request.time;
+    }
+
+    function isValidPrivateUserInfo(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'updatedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+        && data.updatedAt == request.time;
+    }
+
+    function isValidConversation(data) {
+      return data.keys().hasAll(['ownerId', 'peerId', 'participantIds', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'peerId', 'participantIds', 'lastMessageText', 'createdAt', 'updatedAt'])
+        && data.ownerId is string && isValidId(data.ownerId)
+        && data.peerId is string && isValidId(data.peerId)
+        && data.participantIds is list && data.participantIds.size() == 2
+        && data.participantIds[0] is string && isValidId(data.participantIds[0])
+        && data.participantIds[1] is string && isValidId(data.participantIds[1])
+        && data.ownerId in data.participantIds
+        && data.peerId in data.participantIds
+        && (!('lastMessageText' in data) || (data.lastMessageText is string && data.lastMessageText.size() <= 300))
+        && data.createdAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function isValidConversationMember(data, memberId) {
+      return data.keys().hasAll(['uid', 'role', 'joinedAt'])
+        && data.keys().hasOnly(['uid', 'role', 'joinedAt'])
+        && data.uid is string && data.uid == memberId && isValidId(data.uid)
+        && data.role is string && data.role in ['owner', 'member'] && data.role.size() <= 16
+        && data.joinedAt == request.time;
+    }
+
+    function isValidDirectMessage(data) {
+      return data.keys().hasAll(['senderId', 'senderName', 'kind', 'createdAt'])
+        && data.keys().hasOnly(['senderId', 'senderName', 'kind', 'text', 'mediaUrl', 'createdAt'])
+        && data.senderId is string && data.senderId == request.auth.uid && isValidId(data.senderId)
+        && data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 60
+        && data.kind is string && data.kind in ['text', 'like', 'image', 'video', 'audio'] && data.kind.size() <= 16
+        && (!('text' in data) || (data.text is string && data.text.size() <= 2000))
+        && (!('mediaUrl' in data) || (data.mediaUrl is string && data.mediaUrl.size() <= 200000))
+        && data.createdAt == request.time;
+    }
+
+    function isConversationMember(conversationId) {
+      return isVerified()
+        && exists(/databases/$(database)/documents/conversations/$(conversationId)/members/$(request.auth.uid));
+    }
+
+    // Connectivity test document
+    match /test/connection {
+      allow get: if isSignedIn();
+    }
+
+    // Split collection for user profiles (PII isolation)
+    match /users/{userId}/public/profile {
+      allow get: if isVerified() && isValidId(userId);
+      allow list: if isVerified() && existing().uid is string;
+      allow create, update: if isOwner(userId) && isValidId(userId) && isValidPublicProfile(incoming(), userId);
+      allow delete: if false;
+    }
+
+    match /users/{userId}/private/info {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if false;
+      allow create, update: if isOwner(userId) && isValidId(userId) && isValidPrivateUserInfo(incoming(), userId);
+      allow delete: if false;
+    }
+
+    // Conversations and Master Gate members subcollection
+    match /conversations/{conversationId} {
+      allow get: if isVerified() && isValidId(conversationId) && request.auth.uid in existing().participantIds;
+      allow list: if isVerified() && request.auth.uid in existing().participantIds;
+      allow create: if isVerified()
+        && isValidId(conversationId)
+        && isValidConversation(incoming())
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time;
+      allow update: if isVerified()
+        && isValidId(conversationId)
+        && isValidConversation(incoming())
+        && request.auth.uid in existing().participantIds
+        && incoming().ownerId == existing().ownerId
+        && incoming().peerId == existing().peerId
+        && incoming().participantIds == existing().participantIds
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['lastMessageText', 'updatedAt']);
+      allow delete: if false;
+
+      match /members/{memberId} {
+        allow get: if isVerified() && isValidId(conversationId) && isValidId(memberId)
+          && (memberId == request.auth.uid || isConversationMember(conversationId));
+        allow list: if isVerified() && isValidId(conversationId) && existing().uid == request.auth.uid;
+        allow create: if isVerified()
+          && isValidId(conversationId)
+          && isValidId(memberId)
+          && isValidConversationMember(incoming(), memberId)
+          && (
+            (memberId == request.auth.uid && incoming().role == 'owner')
+            || (
+              existsAfter(/databases/$(database)/documents/conversations/$(conversationId))
+              && getAfter(/databases/$(database)/documents/conversations/$(conversationId)).data.ownerId == request.auth.uid
+              && memberId in getAfter(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds
+            )
+          );
+        allow update, delete: if false;
+      }
+
+      match /messages/{messageId} {
+        allow get: if isValidId(conversationId) && isValidId(messageId) && isConversationMember(conversationId);
+        allow list: if isValidId(conversationId) && isConversationMember(conversationId);
+        allow create: if isValidId(conversationId)
+          && isValidId(messageId)
+          && isConversationMember(conversationId)
+          && isValidDirectMessage(incoming());
+        allow update, delete: if false;
+      }
+    }
+  }
+}

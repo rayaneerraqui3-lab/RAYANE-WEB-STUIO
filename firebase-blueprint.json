@@ -1,0 +1,88 @@
+{
+  "entities": {
+    "PublicProfile": {
+      "title": "PublicProfile",
+      "description": "Publicly visible studio profile without PII.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "photoURL": { "type": "string", "maxLength": 500 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "updatedAt"]
+    },
+    "PrivateUserInfo": {
+      "title": "PrivateUserInfo",
+      "description": "Private user PII such as verified Gmail address.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "format": "email", "maxLength": 160 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "updatedAt"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Direct messaging thread metadata between two studio users.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "peerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "participantIds": { "type": "array", "description": "Bounded 2-user tuple of participant UIDs." },
+        "lastMessageText": { "type": "string", "maxLength": 300 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "peerId", "participantIds", "createdAt", "updatedAt"]
+    },
+    "ConversationMember": {
+      "title": "ConversationMember",
+      "description": "Membership record for Master Gate access control.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "role": { "type": "string", "enum": ["owner", "member"], "maxLength": 16 },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "role", "joinedAt"]
+    },
+    "DirectMessage": {
+      "title": "DirectMessage",
+      "description": "Single message inside a direct conversation.",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "senderName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "kind": { "type": "string", "enum": ["text", "like", "image", "video", "audio"], "maxLength": 16 },
+        "text": { "type": "string", "maxLength": 2000 },
+        "mediaUrl": { "type": "string", "maxLength": 200000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "senderName", "kind", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/public/profile": {
+      "schema": { "$ref": "#/entities/PublicProfile" },
+      "description": "Public profile visible to authenticated studio members."
+    },
+    "/users/{userId}/private/info": {
+      "schema": { "$ref": "#/entities/PrivateUserInfo" },
+      "description": "Private PII isolated strictly to the account owner."
+    },
+    "/conversations/{conversationId}": {
+      "schema": { "$ref": "#/entities/Conversation" },
+      "description": "Direct conversation thread metadata."
+    },
+    "/conversations/{conversationId}/members/{memberId}": {
+      "schema": { "$ref": "#/entities/ConversationMember" },
+      "description": "Master Gate membership list for conversation participants."
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/DirectMessage" },
+      "description": "Messages belonging to a direct conversation."
+    }
+  }
+}
